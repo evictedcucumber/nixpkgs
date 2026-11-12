@@ -11,6 +11,8 @@ Only `x86_64-linux` is supported.
 | `legacyPackages.x86_64-linux` | All of nixpkgs, with this repo's packages and overrides applied |
 | `overlays.default` | The same additions and overrides, as an overlay for your own nixpkgs |
 | `packages.x86_64-linux` | Only the packages this repo adds or overrides |
+| `nixosModules.helium` | System-wide Helium policies and force-installed extensions |
+| `homeModules.helium` | Installs Helium for a user, with launch flags, native messaging hosts, and dictionaries |
 
 ## Usage
 
@@ -102,6 +104,45 @@ nix run github:evictedcucumber/nixpkgs#<package>
 ```bash
 nix shell github:evictedcucumber/nixpkgs#<package>
 ```
+
+### Helium modules
+
+The two modules split the work, so each setting lives in one place:
+
+- `nixosModules.helium` writes policies to `/etc/chromium/policies/managed/helium.json`. Chromium reads that directory too. It doesn't install the browser.
+- `homeModules.helium` installs the browser for your user, with its flags and per-user files.
+
+```nix
+# NixOS configuration
+{ inputs, ... }:
+{
+  imports = [ inputs.my-nixpkgs.nixosModules.helium ];
+  programs.helium = {
+    enable = true;
+    extensions = [ "nngceckbapebfimnlniiiahkandclblb" ]; # Bitwarden
+    policies.PasswordManagerEnabled = false;
+  };
+}
+```
+
+```nix
+# home-manager configuration
+{ inputs, pkgs, ... }:
+{
+  imports = [ inputs.my-nixpkgs.homeModules.helium ];
+  programs.helium = {
+    enable = true;
+    commandLineArgs = [
+      "--enable-wayland-ime"
+      "--wayland-text-input-version=3"
+    ];
+    nativeMessagingHosts = [ pkgs.keepassxc ];
+    dictionaries = [ pkgs.hunspellDictsChromium.en_US ];
+  };
+}
+```
+
+Helium uses native Wayland on its own when `XDG_SESSION_TYPE=wayland`, as on Hyprland. Force-installed extensions download through Helium's services, so they only install after you enable those services during onboarding.
 
 ### Get the latest updates
 

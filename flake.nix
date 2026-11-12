@@ -13,6 +13,16 @@
     {
       overlays.default = import ./overlay.nix;
 
+      nixosModules = {
+        helium = ./modules/nixos/helium.nix;
+        default = self.nixosModules.helium;
+      };
+
+      homeModules = {
+        helium = ./modules/home-manager/helium.nix;
+        default = self.homeModules.helium;
+      };
+
       legacyPackages.${system} = import nixpkgs {
         inherit system;
         overlays = [ self.overlays.default ];

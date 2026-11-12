@@ -1,10 +1,20 @@
 {
   description = "Custom packages and overrides on top of nixpkgs";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
 
   outputs =
-    { self, nixpkgs }:
+    {
+      self,
+      nixpkgs,
+      home-manager,
+    }:
     let
       inherit (nixpkgs) lib;
       system = "x86_64-linux";
@@ -32,7 +42,16 @@
         lib.getAttrs (lib.attrNames (self.overlays.default pkgs pkgs)) pkgs
       );
 
-      checks = self.packages;
+      checks.${system} =
+        self.packages.${system}
+        // import ./modules/checks.nix {
+          inherit
+            self
+            nixpkgs
+            home-manager
+            pkgs
+            ;
+        };
 
       formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt-tree;
     };

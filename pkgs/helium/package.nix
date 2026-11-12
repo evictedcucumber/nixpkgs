@@ -35,6 +35,7 @@
   systemd,
   vulkan-loader,
   xdg-utils,
+  commandLineArgs ? "",
 }:
 
 stdenv.mkDerivation (finalAttrs: {
@@ -107,7 +108,7 @@ stdenv.mkDerivation (finalAttrs: {
         ]
       } \
       --prefix PATH : ${lib.makeBinPath [ xdg-utils ]} \
-      --add-flags "\''${NIXOS_OZONE_WL:+\''${WAYLAND_DISPLAY:+--ozone-platform-hint=auto --enable-features=WaylandWindowDecorations --enable-wayland-ime=true}}"
+      --add-flags ${lib.escapeShellArg commandLineArgs}
   '';
 
   meta = {

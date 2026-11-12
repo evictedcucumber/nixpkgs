@@ -4,7 +4,7 @@ A flake that adds packages to nixpkgs and overrides existing ones, for use in ot
 
 ## Layout
 
-- `flake.nix`: outputs `overlays.default`, `legacyPackages` (nixpkgs with the overlay), `packages` and `checks` (only what this repo adds or overrides), and `formatter`. Systems: `x86_64-linux`, `aarch64-linux`.
+- `flake.nix`: outputs `overlays.default`, `legacyPackages` (nixpkgs with the overlay), `packages` and `checks` (only what this repo adds or overrides), and `formatter`. Only `x86_64-linux` is supported.
 - `overlay.nix`: calls every `pkgs/<name>/package.nix` with `callPackage`, then applies `overrides.nix`.
 - `pkgs/<name>/package.nix`: a package that nixpkgs lacks. The directory name is the attribute name. No registration needed.
 - `overrides.nix`: changes to packages nixpkgs already has (`prev.<pkg>.override` / `overrideAttrs`).

@@ -12,6 +12,7 @@ Only `x86_64-linux` is supported.
 | `overlays.default` | The same additions and overrides, as an overlay for your own nixpkgs |
 | `overlays.stable` | Adds `pkgs.stable`: plain `nixos-26.05`, for when unstable breaks. Already applied in `legacyPackages` |
 | `packages.x86_64-linux` | Only the packages this repo adds or overrides |
+| `lib` | nixpkgs' `lib`, unchanged |
 | `nixosModules.helium` | System-wide Helium policies and force-installed extensions |
 | `homeModules.helium` | Installs Helium for a user, with launch flags, native messaging hosts, and dictionaries |
 
@@ -50,6 +51,18 @@ Take the package set straight from `legacyPackages`. You get this repo's nixpkgs
 ```
 
 This instance has no `config` (such as `allowUnfree`). If you need one, use the overlay instead.
+
+To make other inputs use it too, have them follow it. `lib` and `import my-nixpkgs { … }` behave like nixpkgs, with this repo's packages and overrides applied first:
+
+```nix
+inputs = {
+  my-nixpkgs.url = "github:evictedcucumber/nixpkgs";
+  home-manager = {
+    url = "github:nix-community/home-manager";
+    inputs.nixpkgs.follows = "my-nixpkgs";
+  };
+};
+```
 
 ### Apply the overlay to your own nixpkgs
 

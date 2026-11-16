@@ -23,6 +23,8 @@
       pkgs = self.legacyPackages.${system};
     in
     {
+      inherit lib;
+
       overlays.default = import ./overlay.nix;
       overlays.stable = import ./overlay-stable.nix nixpkgs-stable;
 

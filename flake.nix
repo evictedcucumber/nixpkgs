@@ -24,20 +24,7 @@
     in
     {
       overlays.default = import ./overlay.nix;
-
-      # Plain stable nixpkgs as `pkgs.stable`, without this repo's packages or overrides.
-      overlays.stable = final: prev: {
-        stable = import nixpkgs-stable {
-          inherit (prev.stdenv.hostPlatform) system;
-          # Only these keys: the full evaluated unstable config fails stable's option types.
-          config = lib.intersectAttrs {
-            allowUnfree = null;
-            allowUnfreePredicate = null;
-            permittedInsecurePackages = null;
-            allowInsecurePredicate = null;
-          } prev.config;
-        };
-      };
+      overlays.stable = import ./overlay-stable.nix nixpkgs-stable;
 
       nixosModules = {
         helium = ./modules/nixos/helium.nix;

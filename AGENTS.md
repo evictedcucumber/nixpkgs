@@ -9,7 +9,7 @@ A flake that adds packages to nixpkgs and overrides existing ones, for use in ot
 - `pkgs/<name>/package.nix`: a package that nixpkgs lacks. The directory name is the attribute name. No registration needed.
 - `modules/nixos/<name>.nix`, `modules/home-manager/<name>.nix`: NixOS and home-manager modules, exported by hand in `flake.nix`. A module's default package is `pkgs.callPackage` on its `pkgs/<name>/package.nix`, so it works without the overlay. Add a sample config for each module to `modules/checks.nix`, which `nix flake check` evaluates and builds.
 - `overrides.nix`: changes to packages nixpkgs already has (`prev.<pkg>.override` / `overrideAttrs`).
-- `overlays.stable` (in `flake.nix`): exposes the `nixpkgs-stable` input as `pkgs.stable`, untouched by this repo's overlay. Bump its branch in `flake.nix` after each NixOS release.
+- `overlay-stable.nix` (`overlays.stable`): exposes the `nixpkgs-stable` input as `pkgs.stable`, untouched by this repo's overlay. Bump its branch in `flake.nix` after each NixOS release.
 - `.github/workflows/update.yml`: runs daily at 01:00 SAST (23:00 UTC). It runs `nix flake update`, runs `nix-update` on each package in `pkgs/`, runs `nix flake check`, then pushes one commit per change straight to the branch. Only one run goes at a time: a scheduled run cancels any run in progress, and a manual run waits for it.
 
 ## Adding or overriding a package

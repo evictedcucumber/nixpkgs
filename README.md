@@ -100,6 +100,20 @@ In a NixOS module, with `inputs` passed through `specialArgs`:
 
 When a package is broken on unstable, take it from `pkgs.stable` instead, for example `pkgs.stable.hello`. It is plain stable nixpkgs, without this repo's packages or overrides. `legacyPackages` already has it; with the overlay, add `my-nixpkgs.overlays.stable` next to `overlays.default`. It inherits `allowUnfree`, `allowUnfreePredicate`, `permittedInsecurePackages`, and `allowInsecurePredicate` from your config.
 
+If you have your own stable input, make this repo use it so a second copy isn't fetched:
+
+```nix
+inputs = {
+  nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-26.05";
+  my-nixpkgs = {
+    url = "github:evictedcucumber/nixpkgs";
+    inputs.nixpkgs.follows = "nixpkgs";
+    inputs.nixpkgs-stable.follows = "nixpkgs-stable";
+  };
+};
+```
+
 ### Run a package directly
 
 ```bash

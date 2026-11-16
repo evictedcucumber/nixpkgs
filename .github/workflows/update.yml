@@ -34,9 +34,13 @@ jobs:
       - name: Update packages
         run: |
           shopt -s nullglob
+          # nix-update fails on flakes with Nix 2.35: https://github.com/Mic92/nix-update/issues/687
+          nix_update=$(nix build --impure --no-link --print-out-paths --expr '
+            let pkgs = (builtins.getFlake (toString ./.)).inputs.nixpkgs.legacyPackages.x86_64-linux;
+            in pkgs.nix-update.override { nix = pkgs.nixVersions.nix_2_34; }')/bin/nix-update
           for dir in pkgs/*/; do
             pkg=$(basename "$dir")
-            if ! nix run --inputs-from . nixpkgs#nix-update -- --flake "$pkg"; then
+            if ! "$nix_update" --flake "$pkg"; then
               echo "::warning::Failed to update $pkg"
               git checkout -- "$dir"
               continue

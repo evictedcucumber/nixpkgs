@@ -4,7 +4,7 @@ A flake that adds packages to nixpkgs and overrides existing ones, for use in ot
 
 ## Layout
 
-- `flake.nix`: outputs `lib` (nixpkgs' `lib`), `overlays.default`, `overlays.stable`, `legacyPackages` (nixpkgs with the overlay), `packages` (only what this repo adds or overrides), `checks` (those packages plus the module checks), `nixosModules`, `homeModules`, and `formatter`. Only `x86_64-linux` is supported.
+- `flake.nix`: outputs `lib` (nixpkgs' `lib`), `overlays.default`, `overlays.stable`, `legacyPackages` (nixpkgs with the overlay, for every system nixpkgs exposes), `packages` (only what this repo adds or overrides), `checks` (those packages plus the module checks), `nixosModules` (upstream's plus this repo's), `homeModules`, and `formatter`. Packages, checks, and the formatter are `x86_64-linux` only.
 - `overlay.nix`: calls every `pkgs/<name>/package.nix` with `callPackage`, then applies `overrides.nix`.
 - `pkgs/<name>/package.nix`: a package that nixpkgs lacks. The directory name is the attribute name. No registration needed.
 - `modules/nixos/<name>.nix`, `modules/home-manager/<name>.nix`: NixOS and home-manager modules, exported by hand in `flake.nix`. A module's default package is `pkgs.callPackage` on its `pkgs/<name>/package.nix`, so it works without the overlay. Add a sample config for each module to `modules/checks.nix`, which `nix flake check` evaluates and builds.

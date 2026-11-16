@@ -28,7 +28,7 @@
       overlays.default = import ./overlay.nix;
       overlays.stable = import ./overlay-stable.nix nixpkgs-stable;
 
-      nixosModules = {
+      nixosModules = nixpkgs.nixosModules // {
         helium = ./modules/nixos/helium.nix;
         default = self.nixosModules.helium;
       };
@@ -38,13 +38,17 @@
         default = self.homeModules.helium;
       };
 
-      legacyPackages.${system} = import nixpkgs {
-        inherit system;
-        overlays = [
-          self.overlays.default
-          self.overlays.stable
-        ];
-      };
+      # Every system upstream exposes, so inputs that follow this flake can use any of them.
+      legacyPackages = lib.mapAttrs (
+        system: _:
+        import nixpkgs {
+          inherit system;
+          overlays = [
+            self.overlays.default
+            self.overlays.stable
+          ];
+        }
+      ) nixpkgs.legacyPackages;
 
       packages.${system} = lib.filterAttrs (_: lib.isDerivation) (
         lib.getAttrs (lib.attrNames (self.overlays.default pkgs pkgs)) pkgs

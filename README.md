@@ -10,6 +10,7 @@ Only `x86_64-linux` is supported.
 | --- | --- |
 | `legacyPackages.x86_64-linux` | All of nixpkgs, with this repo's packages and overrides applied |
 | `overlays.default` | The same additions and overrides, as an overlay for your own nixpkgs |
+| `overlays.stable` | Adds `pkgs.stable`: plain `nixos-26.05`, for when unstable breaks. Already applied in `legacyPackages` |
 | `packages.x86_64-linux` | Only the packages this repo adds or overrides |
 | `nixosModules.helium` | System-wide Helium policies and force-installed extensions |
 | `homeModules.helium` | Installs Helium for a user, with launch flags, native messaging hosts, and dictionaries |
@@ -94,6 +95,10 @@ In a NixOS module, with `inputs` passed through `specialArgs`:
 ```
 
 `inputs.nixpkgs.follows = "nixpkgs"` stops a second copy of nixpkgs from being fetched.
+
+### Fall back to stable
+
+When a package is broken on unstable, take it from `pkgs.stable` instead, for example `pkgs.stable.hello`. It is plain stable nixpkgs, without this repo's packages or overrides. `legacyPackages` already has it; with the overlay, add `my-nixpkgs.overlays.stable` next to `overlays.default`. It inherits `allowUnfree`, `allowUnfreePredicate`, `permittedInsecurePackages`, and `allowInsecurePredicate` from your config.
 
 ### Run a package directly
 

@@ -3,6 +3,7 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-26.05";
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -13,6 +14,7 @@
     {
       self,
       nixpkgs,
+      nixpkgs-stable,
       home-manager,
     }:
     let
@@ -22,6 +24,20 @@
     in
     {
       overlays.default = import ./overlay.nix;
+
+      # Plain stable nixpkgs as `pkgs.stable`, without this repo's packages or overrides.
+      overlays.stable = final: prev: {
+        stable = import nixpkgs-stable {
+          inherit (prev.stdenv.hostPlatform) system;
+          # Only these keys: the full evaluated unstable config fails stable's option types.
+          config = lib.intersectAttrs {
+            allowUnfree = null;
+            allowUnfreePredicate = null;
+            permittedInsecurePackages = null;
+            allowInsecurePredicate = null;
+          } prev.config;
+        };
+      };
 
       nixosModules = {
         helium = ./modules/nixos/helium.nix;
@@ -35,7 +51,10 @@
 
       legacyPackages.${system} = import nixpkgs {
         inherit system;
-        overlays = [ self.overlays.default ];
+        overlays = [
+          self.overlays.default
+          self.overlays.stable
+        ];
       };
 
       packages.${system} = lib.filterAttrs (_: lib.isDerivation) (

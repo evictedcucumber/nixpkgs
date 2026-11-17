@@ -17,7 +17,18 @@ Only `x86_64-linux` is supported.
 
 ## Usage
 
-Bring your own nixpkgs and make this repo follow it, so only one copy is fetched and your pin decides the nixpkgs version:
+Take nixpkgs from this repo, so you get the nixpkgs version CI checked the packages against and update both with one input:
+
+```nix
+inputs = {
+  my-nixpkgs.url = "github:evictedcucumber/nixpkgs";
+  nixpkgs.follows = "my-nixpkgs/nixpkgs";
+};
+```
+
+Other inputs can keep `inputs.nixpkgs.follows = "nixpkgs"`, and `"${nixpkgs}/nixos/..."` paths work as usual.
+
+To pick your own nixpkgs version instead, make this repo follow your input:
 
 ```nix
 inputs = {
@@ -29,7 +40,7 @@ inputs = {
 };
 ```
 
-Then add the overlay for `pkgs.<package>`, and import the [Helium modules](#helium-modules) for `programs.helium`.
+Either way, add the overlay for `pkgs.<package>`, and import the [Helium modules](#helium-modules) for `programs.helium`.
 
 ### Apply the overlay
 
@@ -68,19 +79,13 @@ In a NixOS module, with `inputs` passed through `specialArgs`:
 
 When a package is broken on unstable, take it from `pkgs.stable` instead, for example `pkgs.stable.hello`. It is plain stable nixpkgs, without this repo's packages or overrides. Add `my-nixpkgs.overlays.stable` next to `overlays.default` to get it. It inherits `allowUnfree`, `allowUnfreePredicate`, `permittedInsecurePackages`, and `allowInsecurePredicate` from your config.
 
-If you have your own stable input, make this repo use it so a second copy isn't fetched:
+If you need stable nixpkgs elsewhere, take it from this repo too, so a second copy isn't fetched:
 
 ```nix
-inputs = {
-  nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-  nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-26.05";
-  my-nixpkgs = {
-    url = "github:evictedcucumber/nixpkgs";
-    inputs.nixpkgs.follows = "nixpkgs";
-    inputs.nixpkgs-stable.follows = "nixpkgs-stable";
-  };
-};
+nixpkgs-stable.follows = "my-nixpkgs/nixpkgs-stable";
 ```
+
+If you pin your own nixpkgs, add your stable input the same way: `my-nixpkgs.inputs.nixpkgs-stable.follows = "nixpkgs-stable"`.
 
 ### Run a package directly
 
@@ -133,11 +138,13 @@ Helium uses native Wayland on its own when `XDG_SESSION_TYPE=wayland`, as on Hyp
 
 ### Get the latest updates
 
-Update this repo's packages and your nixpkgs pin:
+This updates the packages and the nixpkgs that follows this repo:
 
 ```bash
-nix flake update my-nixpkgs nixpkgs
+nix flake update my-nixpkgs
 ```
+
+If you pin your own nixpkgs, update it too with `nix flake update my-nixpkgs nixpkgs`.
 
 ## Contributing
 

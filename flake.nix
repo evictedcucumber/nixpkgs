@@ -63,6 +63,21 @@
             home-manager
             pkgs
             ;
+        }
+        // {
+          # `import` of this source must match legacyPackages and keep the caller's overlays and config.
+          default-nix =
+            let
+              imported = import ./. {
+                inherit system;
+                overlays = [ (final: _: { fromCaller = final.helium; }) ];
+                config.allowUnfree = true;
+              };
+            in
+            assert imported.fromCaller.drvPath == pkgs.helium.drvPath;
+            assert imported.stable.hello.drvPath == pkgs.stable.hello.drvPath;
+            assert imported.config.allowUnfree;
+            pkgs.runCommand "default-nix" { } "touch $out";
         };
 
       formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt-tree;

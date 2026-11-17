@@ -23,7 +23,7 @@
       pkgs = self.legacyPackages.${system};
     in
     {
-      inherit lib;
+      lib = import ./lib.nix { inherit self nixpkgs; };
 
       overlays.default = import ./overlay.nix;
       overlays.stable = import ./overlay-stable.nix nixpkgs-stable;

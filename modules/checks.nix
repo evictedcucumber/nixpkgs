@@ -22,6 +22,24 @@ let
     ];
   };
 
+  # `self.lib.nixosSystem` adds the overlay and both helium modules without imports.
+  builtin = self.lib.nixosSystem {
+    modules = [
+      home-manager.nixosModules.home-manager
+      {
+        nixpkgs.hostPlatform = pkgs.stdenv.hostPlatform.system;
+        boot.isContainer = true;
+        system.stateVersion = "26.05";
+        programs.helium.enable = true;
+        users.users.test.isNormalUser = true;
+        home-manager.users.test = {
+          home.stateVersion = "26.05";
+          programs.helium.enable = true;
+        };
+      }
+    ];
+  };
+
   home = home-manager.lib.homeManagerConfiguration {
     inherit pkgs;
     modules = [
@@ -45,4 +63,7 @@ in
 {
   helium-nixos-module = nixos.config.environment.etc."chromium/policies/managed/helium.json".source;
   helium-home-module = home.activationPackage;
+  helium-builtin =
+    assert builtin.pkgs ? helium;
+    builtin.config.home-manager.users.test.home-files;
 }

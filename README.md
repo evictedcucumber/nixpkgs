@@ -12,7 +12,7 @@ Packages are built and tested on `x86_64-linux` only.
 | `overlays.default` | The same additions and overrides, as an overlay for your own nixpkgs |
 | `overlays.stable` | Adds `pkgs.stable`: plain `nixos-26.05`, for when unstable breaks. Already applied in `legacyPackages` |
 | `packages.x86_64-linux` | Only the packages this repo adds or overrides |
-| `lib` | nixpkgs' `lib`, unchanged |
+| `lib` | nixpkgs' `lib`, with `nixosSystem` adding this repo's overlay and modules to every host |
 | `nixosModules.helium` | System-wide Helium policies and force-installed extensions |
 | `nixosModules.notDetected`, `nixosModules.readOnlyPkgs` | nixpkgs' own modules, unchanged |
 | `homeModules.helium` | Installs Helium for a user, with launch flags, native messaging hosts, and dictionaries |
@@ -50,10 +50,9 @@ Point your `nixpkgs` input here and drop `NixOS/nixpkgs`. Other inputs that foll
 
 It provides what the nixpkgs flake does: `lib`, `legacyPackages`, `nixosModules`, and `import nixpkgs { … }` (with this repo's overlays applied before yours). `legacyPackages` has no `config` (such as `allowUnfree`); use `import nixpkgs { … }` if you need one.
 
-Two things still come from plain nixpkgs:
+`nixpkgs.lib.nixosSystem` adds this repo's overlay and the helium NixOS and home-manager modules to every host, so `pkgs.helium` and `programs.helium` work without imports. A host that passes its own `pkgs` keeps it as is, so build it with `import nixpkgs { … }`, which already has the overlay.
 
-- `nixpkgs.lib.nixosSystem` doesn't apply the overlay. Add `nixpkgs.overlays = [ inputs.nixpkgs.overlays.default ];` to your host.
-- Files inside the nixpkgs source, such as `"${nixpkgs}/nixos/..."` or `<nixpkgs/nixos>`, don't exist here. Use `modulesPath` in NixOS modules instead.
+Files inside the nixpkgs source, such as `"${nixpkgs}/nixos/..."` or `<nixpkgs/nixos>`, don't exist here. Use `modulesPath` in NixOS modules instead.
 
 ### Apply the overlay to your own nixpkgs
 

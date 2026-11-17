@@ -17,25 +17,31 @@ Only `x86_64-linux` is supported.
 
 ## Usage
 
-Take nixpkgs from this repo, so you get the nixpkgs version CI checked the packages against and update both with one input:
+Take nixpkgs and home-manager from this repo, so you get the versions CI checked the packages and modules against and update them all with one input:
 
 ```nix
 inputs = {
   my-nixpkgs.url = "github:evictedcucumber/nixpkgs";
   nixpkgs.follows = "my-nixpkgs/nixpkgs";
+  home-manager.follows = "my-nixpkgs/home-manager";
 };
 ```
 
 Other inputs can keep `inputs.nixpkgs.follows = "nixpkgs"`, and `"${nixpkgs}/nixos/..."` paths work as usual.
 
-To pick your own nixpkgs version instead, make this repo follow your input:
+To pick your own versions instead, make this repo follow your inputs:
 
 ```nix
 inputs = {
   nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  home-manager = {
+    url = "github:nix-community/home-manager";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
   my-nixpkgs = {
     url = "github:evictedcucumber/nixpkgs";
     inputs.nixpkgs.follows = "nixpkgs";
+    inputs.home-manager.follows = "home-manager";
   };
 };
 ```
@@ -138,13 +144,13 @@ Helium uses native Wayland on its own when `XDG_SESSION_TYPE=wayland`, as on Hyp
 
 ### Get the latest updates
 
-This updates the packages and the nixpkgs that follows this repo:
+This updates the packages, and the nixpkgs and home-manager that follow this repo:
 
 ```bash
 nix flake update my-nixpkgs
 ```
 
-If you pin your own nixpkgs, update it too with `nix flake update my-nixpkgs nixpkgs`.
+If you pin your own, update them too with `nix flake update my-nixpkgs nixpkgs home-manager`.
 
 ## Contributing
 

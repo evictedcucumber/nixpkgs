@@ -17,56 +17,26 @@ Only `x86_64-linux` is supported.
 
 ## Usage
 
-Add it as a flake input:
+Bring your own nixpkgs and make this repo follow it, so only one copy is fetched and your pin decides the nixpkgs version:
 
 ```nix
 inputs = {
   nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-  my-nixpkgs.url = "github:evictedcucumber/nixpkgs";
+  my-nixpkgs = {
+    url = "github:evictedcucumber/nixpkgs";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
 };
 ```
 
-Then pick one of the two ways below.
+Then add the overlay for `pkgs.<package>`, and import the [Helium modules](#helium-modules) for `programs.helium`.
 
-### Use it in place of nixpkgs
-
-Take the package set straight from `legacyPackages`. You get this repo's nixpkgs pin, updated daily, so you don't need your own `nixpkgs` input.
-
-```nix
-{
-  inputs.my-nixpkgs.url = "github:evictedcucumber/nixpkgs";
-
-  outputs =
-    { my-nixpkgs, ... }:
-    let
-      pkgs = my-nixpkgs.legacyPackages.x86_64-linux;
-    in
-    {
-      devShells.x86_64-linux.default = pkgs.mkShell {
-        packages = [ pkgs.hello ];
-      };
-    };
-}
-```
-
-This instance has no `config` (such as `allowUnfree`). If you need one, use the overlay instead.
-
-### Apply the overlay to your own nixpkgs
-
-Keep your own nixpkgs pin and config, and add this repo's packages on top.
+### Apply the overlay
 
 In a project:
 
 ```nix
 {
-  inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    my-nixpkgs = {
-      url = "github:evictedcucumber/nixpkgs";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-  };
-
   outputs =
     { nixpkgs, my-nixpkgs, ... }:
     let
@@ -94,11 +64,9 @@ In a NixOS module, with `inputs` passed through `specialArgs`:
 }
 ```
 
-`inputs.nixpkgs.follows = "nixpkgs"` stops a second copy of nixpkgs from being fetched.
-
 ### Fall back to stable
 
-When a package is broken on unstable, take it from `pkgs.stable` instead, for example `pkgs.stable.hello`. It is plain stable nixpkgs, without this repo's packages or overrides. `legacyPackages` already has it; with the overlay, add `my-nixpkgs.overlays.stable` next to `overlays.default`. It inherits `allowUnfree`, `allowUnfreePredicate`, `permittedInsecurePackages`, and `allowInsecurePredicate` from your config.
+When a package is broken on unstable, take it from `pkgs.stable` instead, for example `pkgs.stable.hello`. It is plain stable nixpkgs, without this repo's packages or overrides. Add `my-nixpkgs.overlays.stable` next to `overlays.default` to get it. It inherits `allowUnfree`, `allowUnfreePredicate`, `permittedInsecurePackages`, and `allowInsecurePredicate` from your config.
 
 If you have your own stable input, make this repo use it so a second copy isn't fetched:
 
@@ -126,7 +94,7 @@ nix shell github:evictedcucumber/nixpkgs#<package>
 
 ### Helium modules
 
-The two modules split the work, so each setting lives in one place:
+Import these where you need them. They don't need the overlay: each builds Helium from this repo's own package. The two modules split the work, so each setting lives in one place:
 
 - `nixosModules.helium` writes policies to `/etc/chromium/policies/managed/helium.json`. Chromium reads that directory too. It doesn't install the browser.
 - `homeModules.helium` installs the browser for your user, with its flags and per-user files.
@@ -165,8 +133,10 @@ Helium uses native Wayland on its own when `XDG_SESSION_TYPE=wayland`, as on Hyp
 
 ### Get the latest updates
 
+Update this repo's packages and your nixpkgs pin:
+
 ```bash
-nix flake update my-nixpkgs
+nix flake update my-nixpkgs nixpkgs
 ```
 
 ## Contributing

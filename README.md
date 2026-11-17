@@ -2,57 +2,54 @@
 
 My own custom nixpkgs: packages nixpkgs lacks, and overrides of ones it has. It tracks `nixos-unstable`, and CI updates nixpkgs and the packages daily at 01:00 SAST.
 
-Packages are built and tested on `x86_64-linux` only.
+Only `x86_64-linux` is supported.
 
 ## Outputs
 
 | Output | What it is |
 | --- | --- |
-| `legacyPackages.<system>` | All of nixpkgs, with this repo's packages and overrides applied |
+| `legacyPackages.x86_64-linux` | All of nixpkgs, with this repo's packages and overrides applied |
 | `overlays.default` | The same additions and overrides, as an overlay for your own nixpkgs |
 | `overlays.stable` | Adds `pkgs.stable`: plain `nixos-26.05`, for when unstable breaks. Already applied in `legacyPackages` |
 | `packages.x86_64-linux` | Only the packages this repo adds or overrides |
-| `lib` | nixpkgs' `lib`, with `nixosSystem` adding this repo's overlay and modules to every host |
 | `nixosModules.helium` | System-wide Helium policies and force-installed extensions |
-| `nixosModules.notDetected`, `nixosModules.readOnlyPkgs` | nixpkgs' own modules, unchanged |
 | `homeModules.helium` | Installs Helium for a user, with launch flags, native messaging hosts, and dictionaries |
 
 ## Usage
 
-Add it as a flake input in one of the two ways below.
+Add it as a flake input:
+
+```nix
+inputs = {
+  nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+  my-nixpkgs.url = "github:evictedcucumber/nixpkgs";
+};
+```
+
+Then pick one of the two ways below.
 
 ### Use it in place of nixpkgs
 
-Point your `nixpkgs` input here and drop `NixOS/nixpkgs`. Other inputs that follow it get this repo's packages too. You get this repo's nixpkgs pin, updated daily.
+Take the package set straight from `legacyPackages`. You get this repo's nixpkgs pin, updated daily, so you don't need your own `nixpkgs` input.
 
 ```nix
 {
-  inputs = {
-    nixpkgs.url = "github:evictedcucumber/nixpkgs";
-    home-manager = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-  };
+  inputs.my-nixpkgs.url = "github:evictedcucumber/nixpkgs";
 
   outputs =
-    { nixpkgs, ... }:
+    { my-nixpkgs, ... }:
     let
-      pkgs = nixpkgs.legacyPackages.x86_64-linux;
+      pkgs = my-nixpkgs.legacyPackages.x86_64-linux;
     in
     {
       devShells.x86_64-linux.default = pkgs.mkShell {
-        packages = [ pkgs.helium ];
+        packages = [ pkgs.hello ];
       };
     };
 }
 ```
 
-It provides what the nixpkgs flake does: `lib`, `legacyPackages`, `nixosModules`, and `import nixpkgs { … }` (with this repo's overlays applied before yours). `legacyPackages` has no `config` (such as `allowUnfree`); use `import nixpkgs { … }` if you need one.
-
-`nixpkgs.lib.nixosSystem` adds this repo's overlay and the helium NixOS and home-manager modules to every host, so `pkgs.helium` and `programs.helium` work without imports. A host that passes its own `pkgs` keeps it as is, so build it with `import nixpkgs { … }`, which already has the overlay.
-
-Files inside the nixpkgs source, such as `"${nixpkgs}/nixos/..."` or `<nixpkgs/nixos>`, don't exist here. Use `modulesPath` in NixOS modules instead.
+This instance has no `config` (such as `allowUnfree`). If you need one, use the overlay instead.
 
 ### Apply the overlay to your own nixpkgs
 

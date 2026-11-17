@@ -23,12 +23,10 @@
       pkgs = self.legacyPackages.${system};
     in
     {
-      lib = import ./lib.nix { inherit self nixpkgs; };
-
       overlays.default = import ./overlay.nix;
       overlays.stable = import ./overlay-stable.nix nixpkgs-stable;
 
-      nixosModules = nixpkgs.nixosModules // {
+      nixosModules = {
         helium = ./modules/nixos/helium.nix;
         default = self.nixosModules.helium;
       };
@@ -38,17 +36,13 @@
         default = self.homeModules.helium;
       };
 
-      # Every system upstream exposes, so inputs that follow this flake can use any of them.
-      legacyPackages = lib.mapAttrs (
-        system: _:
-        import nixpkgs {
-          inherit system;
-          overlays = [
-            self.overlays.default
-            self.overlays.stable
-          ];
-        }
-      ) nixpkgs.legacyPackages;
+      legacyPackages.${system} = import nixpkgs {
+        inherit system;
+        overlays = [
+          self.overlays.default
+          self.overlays.stable
+        ];
+      };
 
       packages.${system} = lib.filterAttrs (_: lib.isDerivation) (
         lib.getAttrs (lib.attrNames (self.overlays.default pkgs pkgs)) pkgs
@@ -63,21 +57,6 @@
             home-manager
             pkgs
             ;
-        }
-        // {
-          # `import` of this source must match legacyPackages and keep the caller's overlays and config.
-          default-nix =
-            let
-              imported = import ./. {
-                inherit system;
-                overlays = [ (final: _: { fromCaller = final.helium; }) ];
-                config.allowUnfree = true;
-              };
-            in
-            assert imported.fromCaller.drvPath == pkgs.helium.drvPath;
-            assert imported.stable.hello.drvPath == pkgs.stable.hello.drvPath;
-            assert imported.config.allowUnfree;
-            pkgs.runCommand "default-nix" { } "touch $out";
         };
 
       formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt-tree;

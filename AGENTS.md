@@ -4,14 +4,12 @@ A flake that adds packages to nixpkgs and overrides existing ones, for use in ot
 
 ## Layout
 
-- `flake.nix`: outputs `lib` (from `lib.nix`), `overlays.default`, `overlays.stable`, `legacyPackages` (nixpkgs with the overlay, for every system nixpkgs exposes), `packages` (only what this repo adds or overrides), `checks` (those packages plus the module checks), `nixosModules` (upstream's plus this repo's), `homeModules`, and `formatter`. Packages, checks, and the formatter are `x86_64-linux` only.
-- `lib.nix`: nixpkgs' `lib`, with `nixosSystem` adding the overlays and the helium NixOS and home-manager modules to every host. It skips the overlays when the host passes its own `pkgs`.
+- `flake.nix`: outputs `overlays.default`, `overlays.stable`, `legacyPackages` (nixpkgs with the overlay), `packages` (only what this repo adds or overrides), `checks` (those packages plus the module checks), `nixosModules`, `homeModules`, and `formatter`. Only `x86_64-linux` is supported.
 - `overlay.nix`: calls every `pkgs/<name>/package.nix` with `callPackage`, then applies `overrides.nix`.
 - `pkgs/<name>/package.nix`: a package that nixpkgs lacks. The directory name is the attribute name. No registration needed.
 - `modules/nixos/<name>.nix`, `modules/home-manager/<name>.nix`: NixOS and home-manager modules, exported by hand in `flake.nix`. A module's default package is `pkgs.callPackage` on its `pkgs/<name>/package.nix`, so it works without the overlay. Add a sample config for each module to `modules/checks.nix`, which `nix flake check` evaluates and builds.
 - `overrides.nix`: changes to packages nixpkgs already has (`prev.<pkg>.override` / `overrideAttrs`).
 - `overlay-stable.nix` (`overlays.stable`): exposes the `nixpkgs-stable` input as `pkgs.stable`, untouched by this repo's overlay. Bump its branch in `flake.nix` after each NixOS release.
-- `default.nix`: lets `import <this source> { … }` work like `import nixpkgs { … }`, for flakes whose `nixpkgs` input follows this one. It imports the nixpkgs pinned in `flake.lock` with both overlays applied before the caller's.
 - `.github/workflows/update.yml`: runs daily at 01:00 SAST (23:00 UTC). It runs `nix flake update`, runs `nix-update` on each package in `pkgs/`, runs `nix flake check`, then pushes one commit per change straight to the branch. Only one run goes at a time: a scheduled run cancels any run in progress, and a manual run waits for it.
 
 ## Adding or overriding a package

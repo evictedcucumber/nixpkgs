@@ -4,7 +4,7 @@ A flake that adds packages to nixpkgs and overrides existing ones, for use in ot
 
 ## Layout
 
-- `flake.nix`: outputs `overlays.default` (rust-overlay, `rust.nix`, then `overlay.nix`), `overlays.stable`, `legacyPackages` (nixpkgs with the overlay), `packages` (only what this repo adds or overrides), `checks` (those packages plus the module checks), `nixosModules`, `homeModules`, and `formatter`. Only `x86_64-linux` is supported.
+- `flake.nix`: outputs `overlays.default` (rust-overlay, `rust.nix`, then `overlay.nix`), `overlays.stable`, `legacyPackages` (nixpkgs with the overlay), `packages` (only what this repo adds or overrides), `checks` (those packages, the module checks, and `checks/rust-toolchain-for`, which evaluates `rustToolchainFor` without building a toolchain), `nixosModules`, `homeModules`, and `formatter`. Only `x86_64-linux` is supported.
 - Input `rust-overlay`: its overlay is part of `overlays.default`, so consumers get `pkgs.rust-bin` without their own input.
 - `rust.nix`: `pkgs.rustToolchainFor dir`, the toolchain from `dir`'s rust-toolchain file, else the latest stable.
 - Inputs `nixpkgs`, `nixpkgs-stable`, and `home-manager`: consumers follow them (`nixpkgs.follows = "my-nixpkgs/nixpkgs"`, `home-manager.follows = "my-nixpkgs/home-manager"`) instead of pinning their own, so keep them even if this repo stops using one.

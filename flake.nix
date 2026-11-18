@@ -66,6 +66,9 @@
             home-manager
             pkgs
             ;
+        }
+        // {
+          rust-toolchain-for = import ./checks/rust-toolchain-for pkgs;
         };
 
       formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt-tree;

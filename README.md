@@ -9,7 +9,7 @@ Only `x86_64-linux` is supported.
 | Output | What it is |
 | --- | --- |
 | `legacyPackages.x86_64-linux` | All of nixpkgs, with this repo's packages and overrides applied |
-| `overlays.default` | The same additions and overrides, as an overlay for your own nixpkgs |
+| `overlays.default` | The same additions and overrides, as an overlay for your own nixpkgs. Includes [rust-overlay](https://github.com/oxalica/rust-overlay)'s `pkgs.rust-bin` and `pkgs.rustToolchainFor` |
 | `overlays.stable` | Adds `pkgs.stable`: plain `nixos-26.05`, for when unstable breaks. Already applied in `legacyPackages` |
 | `packages.x86_64-linux` | Only the packages this repo adds or overrides |
 | `nixosModules.helium` | System-wide Helium policies and force-installed extensions |
@@ -80,6 +80,18 @@ In a NixOS module, with `inputs` passed through `specialArgs`:
   environment.systemPackages = [ pkgs.hello ];
 }
 ```
+
+### Rust toolchains
+
+`pkgs.rustToolchainFor ./.` returns the toolchain pinned by the project's `rust-toolchain.toml` (or `rust-toolchain`) file, or the latest stable Rust if there is none:
+
+```nix
+devShells.x86_64-linux.default = pkgs.mkShell {
+  packages = [ (pkgs.rustToolchainFor ./.) ];
+};
+```
+
+The rest of rust-overlay's `pkgs.rust-bin` works as usual, for example `pkgs.rust-bin.stable.latest.default.override { targets = [ "wasm32-unknown-unknown" ]; }`. CI updates rust-overlay daily with the other inputs, so "latest stable" is as of your `my-nixpkgs` lock.
 
 ### Fall back to stable
 

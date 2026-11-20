@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Add Rust channel manifests (1.x.y or nightly-YYYY-MM-DD) to manifests.json.
-# Without arguments, adds the current stable release.
+# Without arguments, adds the current stable release and the latest nightly.
 set -euo pipefail
 
 file="$(dirname "$(readlink -f "$0")")/manifests.json"
@@ -10,7 +10,8 @@ channels=("$@")
 if [ ${#channels[@]} -eq 0 ]; then
   version=$(curl -fsSL "$dist/channel-rust-stable.toml" |
     awk '/^\[pkg\.rust\]$/ { found = 1; next } found && /^version/ { gsub(/"/, "", $3); print $3; found = 0 }')
-  channels=("$version")
+  date=$(curl -fsSL "$dist/channel-rust-nightly.toml" | awk -F'"' '/^date = / { print $2 }')
+  channels=("$version" "nightly-$date")
 fi
 
 [ -f "$file" ] || echo '{}' >"$file"

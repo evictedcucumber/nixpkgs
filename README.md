@@ -91,7 +91,7 @@ devShells.x86_64-linux.default = pkgs.mkShell {
 };
 ```
 
-It supports stable versions (`1.85.0`, or `1.85` for the newest patch release), dated nightlies (`nightly-2026-11-19`), and the file's `components`, `targets`, and `profile`. Toolchains are built from the official Rust dist manifests pinned in `rust/manifests.json`. For a channel that isn't there, run `rust/update.sh <channel>` and commit the result. CI adds each new stable release daily.
+It supports stable versions (`1.85.0`, or `1.85` for the newest patch release), dated nightlies (`nightly-2026-11-19`), and the file's `components`, `targets`, and `profile`. Toolchains are built from the official Rust dist manifests pinned in `rust/manifests.json`. For a channel that isn't there, run `rust/update.sh <channel>` and commit the result. CI adds each new stable release and each day's nightly.
 
 ### Fall back to stable
 

@@ -55,7 +55,7 @@ jobs:
         run: |
           added=$(nix shell --inputs-from . nixpkgs#curl nixpkgs#jq -c rust/update.sh)
           if [ -n "$added" ]; then
-            git commit -m "chore(rust): add $added manifest" -- rust/manifests.json
+            git commit -m "chore(rust): add ${added//$'\n'/, } manifests" -- rust/manifests.json
           fi
 
       - name: Check

@@ -4,9 +4,10 @@ A flake that adds packages to nixpkgs and overrides existing ones, for use in ot
 
 ## Layout
 
-- `flake.nix`: outputs `overlays.default` (rust-overlay, `rust.nix`, then `overlay.nix`), `overlays.stable`, `legacyPackages` (nixpkgs with the overlay), `packages` (only what this repo adds or overrides), `checks` (those packages, the module checks, and `checks/rust-toolchain-for`, which evaluates `rustToolchainFor` without building a toolchain), `nixosModules`, `homeModules`, and `formatter`. Only `x86_64-linux` is supported.
-- Input `rust-overlay`: its overlay is part of `overlays.default`, so consumers get `pkgs.rust-bin` without their own input.
-- `rust.nix`: `pkgs.rustToolchainFor dir`, the toolchain from `dir`'s rust-toolchain file, else the latest stable.
+- `flake.nix`: outputs `overlays.default` (`rust/overlay.nix`, then `overlay.nix`), `overlays.stable`, `legacyPackages` (nixpkgs with the overlay), `packages` (only what this repo adds or overrides), `checks` (those packages, the module checks, and `checks/rust-toolchain-for`, which evaluates `rustToolchainFor` without building a toolchain), `nixosModules`, `homeModules`, and `formatter`. Only `x86_64-linux` is supported.
+- `rust/overlay.nix`: `pkgs.rustToolchainFor dir`, the toolchain from `dir`'s rust-toolchain file (stable `1.x.y` or `1.x`, dated `nightly-YYYY-MM-DD`), else the latest stable in `manifests.json`. Other channels throw.
+- `rust/toolchain.nix`: builds one toolchain derivation from a parsed dist manifest, its components, targets, and profile.
+- `rust/manifests.json`: channel to hash of its official dist manifest. `rust/update.sh [channel...]` adds channels, or the latest stable with no arguments.
 - Inputs `nixpkgs`, `nixpkgs-stable`, and `home-manager`: consumers follow them (`nixpkgs.follows = "my-nixpkgs/nixpkgs"`, `home-manager.follows = "my-nixpkgs/home-manager"`) instead of pinning their own, so keep them even if this repo stops using one.
 - `overlay.nix`: calls every `pkgs/<name>/package.nix` with `callPackage`, then applies `overrides.nix`.
 - `pkgs/<name>/package.nix`: a package that nixpkgs lacks. The directory name is the attribute name. No registration needed.

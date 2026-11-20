@@ -8,10 +8,6 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    rust-overlay = {
-      url = "github:oxalica/rust-overlay";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs =
@@ -20,7 +16,6 @@
       nixpkgs,
       nixpkgs-stable,
       home-manager,
-      rust-overlay,
     }:
     let
       inherit (nixpkgs) lib;
@@ -29,8 +24,7 @@
     in
     {
       overlays.default = lib.composeManyExtensions [
-        rust-overlay.overlays.default
-        (import ./rust.nix)
+        (import ./rust/overlay.nix)
         (import ./overlay.nix)
       ];
       overlays.stable = import ./overlay-stable.nix nixpkgs-stable;

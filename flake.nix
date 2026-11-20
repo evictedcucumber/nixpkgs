@@ -63,6 +63,7 @@
         }
         // {
           rust-toolchain-for = import ./checks/rust-toolchain-for pkgs;
+          rust-toolchain-build = import ./checks/rust-toolchain-build pkgs;
         };
 
       formatter.${system} = nixpkgs.legacyPackages.${system}.nixfmt-tree;

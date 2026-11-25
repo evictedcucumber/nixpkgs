@@ -31,6 +31,7 @@
 
       nixosModules = {
         helium = ./modules/nixos/helium.nix;
+        nginx-proxy-manager = ./modules/nixos/nginx-proxy-manager.nix;
         default = self.nixosModules.helium;
       };
 

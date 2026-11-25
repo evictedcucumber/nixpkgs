@@ -10,6 +10,7 @@
   makeWrapper,
   coreutils,
   openssl,
+  logrotate,
   nginx,
 }:
 
@@ -56,7 +57,13 @@ stdenv.mkDerivation (finalAttrs: {
       --replace-fail 'app.listen(3000,' 'app.listen(3000, "127.0.0.1",'
 
     substituteInPlace backend/setup.js \
-      --replace-fail ' with password: ''${initialAdminPassword}' ""
+      --replace-fail ' with password: ''${initialAdminPassword}' "" \
+      --replace-fail 'process.env.INITIAL_ADMIN_PASSWORD;' 'process.env.INITIAL_ADMIN_PASSWORD; delete process.env.INITIAL_ADMIN_PASSWORD;' \
+      --replace-fail '"logrotate /etc/logrotate.d/nginx-proxy-manager"' '"logrotate --state /data/logrotate.status '$out'/share/nginx-proxy-manager/logrotate.conf"'
+
+    substituteInPlace docker/rootfs/etc/logrotate.d/nginx-proxy-manager \
+      --replace-fail $'    su npm npm\n' "" \
+      --replace-fail /run/nginx/nginx.pid /run/nginx-proxy-manager/nginx.pid
 
     substituteInPlace backend/internal/certificate.js \
       --replace-fail '"/etc/letsencrypt.ini"' '"'$out'/share/nginx-proxy-manager/letsencrypt.ini"'
@@ -146,6 +153,7 @@ stdenv.mkDerivation (finalAttrs: {
     cp -r docker/rootfs/var/www/html $share/www
     cp -r docker/rootfs/etc/nginx $share/nginx
     cp docker/rootfs/etc/letsencrypt.ini $share/letsencrypt.ini
+    cp docker/rootfs/etc/logrotate.d/nginx-proxy-manager $share/logrotate.conf
 
     makeWrapper ${lib.getExe nodejs} $out/bin/nginx-proxy-manager \
       --chdir $out/lib/nginx-proxy-manager/backend \
@@ -155,6 +163,7 @@ stdenv.mkDerivation (finalAttrs: {
         lib.makeBinPath [
           openssl
           coreutils
+          logrotate
         ]
       }
 

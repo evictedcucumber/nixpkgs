@@ -13,7 +13,7 @@ let
   prepareScript = pkgs.writeShellScript "nginx-proxy-manager-prepare" ''
     set -euo pipefail
 
-    mkdir -p /data/{nginx,custom_ssl,logs,access,letsencrypt-acme-challenge}
+    mkdir -p /data/{nginx,custom_ssl,logs,access,letsencrypt,letsencrypt-acme-challenge}
     mkdir -p /data/nginx/{default_host,default_www,proxy_host,redirection_host,stream,dead_host,temp}
 
     cp -rT --no-preserve=mode ${package}/share/nginx-proxy-manager/nginx /etc/nginx
@@ -64,7 +64,6 @@ let
     CacheDirectoryMode = "0750";
     BindPaths = [
       "${cfg.dataDir}:/data"
-      "${cfg.dataDir}/letsencrypt:/etc/letsencrypt"
       "${runDir}/nginx:/etc/nginx"
     ];
     ProtectSystem = "strict";
@@ -96,6 +95,11 @@ let
       "~@resources"
     ];
     UMask = "0027";
+  };
+
+  # The prepare unit creates the letsencrypt directory, so only later units can bind it.
+  serviceHardening = hardening // {
+    BindPaths = hardening.BindPaths ++ [ "${cfg.dataDir}/letsencrypt:/etc/letsencrypt" ];
   };
 in
 {
@@ -202,11 +206,6 @@ in
         user = cfg.user;
         group = cfg.group;
       };
-      "${cfg.dataDir}/letsencrypt".d = {
-        mode = "0750";
-        user = cfg.user;
-        group = cfg.group;
-      };
     };
 
     systemd.services.nginx-proxy-manager-prepare = {
@@ -233,7 +232,8 @@ in
         "network.target"
         "nginx-proxy-manager-prepare.service"
       ];
-      serviceConfig = hardening // {
+      serviceConfig = serviceHardening // {
+        ReadWritePaths = [ runDir ];
         ExecStart = "${package.nginx}/bin/nginx -c /etc/nginx/nginx.conf -e stderr";
         ExecReload = "${pkgs.coreutils}/bin/kill -HUP $MAINPID";
         Restart = "on-failure";
@@ -260,7 +260,7 @@ in
         INITIAL_ADMIN_EMAIL = cfg.initialAdmin.email;
       };
       serviceConfig =
-        hardening
+        serviceHardening
         // {
           ExecStart = startScript;
           Restart = "on-failure";
